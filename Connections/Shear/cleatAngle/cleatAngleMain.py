@@ -1753,7 +1753,7 @@ class MainController(QMainWindow):
             status = self.resultObj['Bolt']['status']
             self.commLogicObj.call_3DModel(status)
             if status is True:
-                self.callCleat2D_drawing("All")
+                # self.callCleat2D_drawing("All")
                 self.ui.actionShow_all.setEnabled(True)
                 self.ui.actionShow_beam.setEnabled(True)
                 self.ui.actionShow_column.setEnabled(True)

@@ -212,6 +212,7 @@ class CommonDesignLogic(object):
                              height=notch_height,
                              width= (pBeam_B / 2.0 - (pBeam_tw / 2.0 + gap)) + gap,
                              length=sBeam_B)
+            print(notch_R1, notch_height, (pBeam_B / 2.0 - (pBeam_tw / 2.0 + gap)) + gap, sBeam_B)
 
         # column = ISectionold(B = 83, T = 14.1, D = 250, t = 11, R1 = 12, R2 = 3.2, alpha = 98, length = 1000)
         beam = ISection(B=sBeam_B, T=sBeam_T, D=sBeam_D,

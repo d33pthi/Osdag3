@@ -275,21 +275,10 @@ def bc_endplate_design(uiObj):
     no_tension_side_rqd = flange_tension / (0.80 * bolt_tension_capacity)
     no_tension_side = round_up(no_tension_side_rqd, multiplier=2, minimum_value=2)
 
-    # Prying force
     b_e = beam_B / 2
     prying_force = IS800_2007.cl_10_4_7_bolt_prying_force(
-        T_e=flange_tension/4, l_v=l_v, f_o=0.7*bolt_fu, b_e=b_e, t=end_plate_thickness, f_y=end_plate_fy,
+        T_e=flange_tension / 4, l_v=l_v, f_o=0.7 * bolt_fu, b_e=b_e, t=end_plate_thickness, f_y=end_plate_fy,
         end_dist=end_dist, pre_tensioned=False)
-    toe_of_weld_moment = abs(flange_tension/4 * l_v - prying_force * end_dist)
-    end_plate_thickness_min = math.sqrt(toe_of_weld_moment * 1.10 * 4 / (end_plate_fy * b_e))
-
-    # End Plate Thickness
-    if end_plate_thickness < max(column_tf, end_plate_thickness_min):
-        end_plate_thickness_min = math.ceil(max(column_tf, end_plate_thickness_min))
-        design_status = False
-        logger.error(": Chosen end plate thickness is not sufficient")
-        logger.warning(": Minimum required thickness of end plate is %2.2f mm " % end_plate_thickness_min)
-        logger.info(": Increase the thickness of end plate ")
 
     # Detailing
     bolt_combined_status = False
@@ -486,13 +475,21 @@ def bc_endplate_design(uiObj):
             extreme_bolt_dist = beam_d - beam_tf/2 + l_v + (no_rows['out_tension_flange']-1) * pitch_dist
         sigma_yi_sq = 0
         for bolt_row in range(int(no_rows['out_tension_flange'])):
+            print("out_tension_flange", bolt_row, beam_d - beam_tf/2 + l_v + bolt_row * pitch_dist)
             sigma_yi_sq += (beam_d - beam_tf/2 + l_v + bolt_row * pitch_dist) ** 2
+
         for bolt_row in range(int(no_rows['in_tension_flange'])):
+            print("in_tension_flange", bolt_row, beam_d - 3 * beam_tf/2 - l_v - bolt_row * pitch_dist)
             sigma_yi_sq += (beam_d - 3 * beam_tf/2 - l_v - bolt_row * pitch_dist) ** 2
+
+        for bolt_row in range(int(no_rows['in_compression_flange'])):
+            print("in_compression_flange", bolt_row, beam_tf/2 + l_v + bolt_row * pitch_dist)
+            sigma_yi_sq += (beam_tf/2 + l_v + bolt_row * pitch_dist) ** 2
 
         moment_tension = factored_moment * extreme_bolt_dist / sigma_yi_sq / 2
         tension_in_bolt = axial_tension + moment_tension + prying_force
         shear_in_bolt = factored_shear_load / number_of_bolts
+
         # Check for combined tension and shear
         if bolt_type == "Friction Grip Bolt":
             combined_capacity = IS800_2007.cl_10_4_6_friction_bolt_combined_shear_and_tension(
@@ -510,6 +507,20 @@ def bc_endplate_design(uiObj):
             logger.info(": Re-design the connection using bolt of higher grade or diameter")
             break
 
+        # Prying force
+
+        print("prying force:", prying_force)
+        # toe_of_weld_moment = abs(flange_tension/4 * l_v - prying_force * end_dist)
+        toe_of_weld_moment = abs(tension_in_bolt * l_v - prying_force * end_dist)
+        end_plate_thickness_min = math.sqrt(toe_of_weld_moment * 1.10 * 4 / (end_plate_fy * b_e))
+
+        # End Plate Thickness
+        if end_plate_thickness < max(column_tf, end_plate_thickness_min):
+            end_plate_thickness_min = math.ceil(max(column_tf, end_plate_thickness_min))
+            design_status = False
+            logger.error(": Chosen end plate thickness is not sufficient")
+            logger.warning(": Minimum required thickness of end plate is %2.2f mm " % end_plate_thickness_min)
+            logger.info(": Increase the thickness of end plate ")
     #######################################################################
     # WELD DESIGN
 
@@ -804,46 +815,56 @@ def bc_endplate_design(uiObj):
     st_fu = beam_fu
     st_fy = beam_fy
     st_height = l_v + pitch_dist + end_dist
-    for plate_tk in available_plates:
-        if plate_tk >= beam_tw:
-            st_thickness = plate_tk
-            break
-    st_length = st_height + 100.0
+    # for plate_tk in available_plates:
+    #     if plate_tk >= beam_tw:
+    #         st_thickness = plate_tk
+    #         break
+    available_thickness = list([x for x in available_plates if (beam_tw <= x <= max(available_plates))])
+    st_thickness = min(available_thickness)
+    st_length_min = st_height + 100.0
     st_notch_top = 50.0
     st_notch_bottom = round_up(value=weld_thickness_flange, multiplier=5, minimum_value=5)
-    st_eff_length = st_length - st_notch_bottom
-    st_beam_weld_min = IS800_2007.cl_10_5_2_3_min_weld_size(st_thickness, beam_tf)
-    st_beam_weld_max = max(beam_tf, st_thickness)
 
+    st_force = 4 * tension_in_bolt
+    st_moment = st_force * (l_v + pitch_dist / 2)
+    st_length = st_length_min
+    st_beam_weld = 3.0
     if st_status is True:
-
-        while st_length <= 1000:
-            st_eff_length = st_length - st_notch_bottom
-            st_force = 4 * tension_in_bolt
-            st_moment = st_force * (l_v + pitch_dist / 2)
-            st_shear_capacity = st_eff_length * st_thickness * st_fy / (math.sqrt(3) * gamma_m0)
-            st_moment_capacity = st_eff_length ** 2 * st_thickness * st_fy / (4 * gamma_m0)
-            available_welds = list([x for x in welds_sizes if (st_beam_weld_min <= x <= st_beam_weld_max)])
-            for st_beam_weld in available_welds:
-                if st_beam_weld <= st_beam_weld_min:
-                    st_beam_weld = st_beam_weld_min
-                st_beam_weld_throat = IS800_2007.cl_10_5_3_2_fillet_weld_effective_throat_thickness(
-                    fillet_size=st_beam_weld, fusion_face_angle=90)
-                st_beam_weld_eff_length = IS800_2007.cl_10_5_4_1_fillet_weld_effective_length(
-                    fillet_size=st_beam_weld, available_length=st_eff_length)
-                st_weld_shear_stress = st_force / (2 * st_beam_weld_eff_length * st_beam_weld_throat)
-                st_weld_moment_stress = st_moment / (2 * st_beam_weld * st_beam_weld_eff_length ** 2 / 4)
-                st_eq_weld_stress = math.sqrt(st_weld_shear_stress ** 2 + st_weld_moment_stress ** 2)
-                if st_eq_weld_stress <= IS800_2007.cl_10_5_7_1_1_fillet_weld_design_stress(
-                        ultimate_stresses=(weld_fu, beam_fu, st_fu)):
+        # stiffener plate design
+        for st_thickness in available_thickness:
+            print(st_thickness)
+            while st_length <= float(int(beam_d/100)*100):
+                st_eff_length = st_length - st_notch_bottom
+                st_shear_capacity = st_eff_length * st_thickness * st_fy / (math.sqrt(3) * gamma_m0)
+                st_moment_capacity = st_eff_length ** 2 * st_thickness * st_fy / (4 * gamma_m0)
+                print(st_thickness, st_length,st_shear_capacity,st_moment_capacity,st_force,st_moment)
+                if st_moment <= st_moment_capacity and st_force <= st_shear_capacity:
                     break
-            if st_moment <= st_moment_capacity and st_force <= st_shear_capacity and \
-                    st_eq_weld_stress <= IS800_2007.cl_10_5_7_1_1_fillet_weld_design_stress(
-                    ultimate_stresses=(weld_fu, beam_fu, st_fu)):
+                else:
+                    st_length += 20
+            if st_moment <= st_moment_capacity and st_force <= st_shear_capacity:
                 break
             else:
-                st_length += 20
+                st_length = st_length_min
 
+        # Stiffener Weld Design
+        st_beam_weld_min = IS800_2007.cl_10_5_2_3_min_weld_size(st_thickness, beam_tf)
+        st_beam_weld_max = max(beam_tf, st_thickness)
+
+        available_welds = list([x for x in welds_sizes if (st_beam_weld_min <= x <= st_beam_weld_max)])
+        for st_beam_weld in available_welds:
+            if st_beam_weld <= st_beam_weld_min:
+                st_beam_weld = st_beam_weld_min
+            st_beam_weld_throat = IS800_2007.cl_10_5_3_2_fillet_weld_effective_throat_thickness(
+                fillet_size=st_beam_weld, fusion_face_angle=90)
+            st_beam_weld_eff_length = IS800_2007.cl_10_5_4_1_fillet_weld_effective_length(
+                fillet_size=st_beam_weld, available_length=st_eff_length)
+            st_weld_shear_stress = st_force / (2 * st_beam_weld_eff_length * st_beam_weld_throat)
+            st_weld_moment_stress = st_moment / (2 * st_beam_weld * st_beam_weld_eff_length ** 2 / 4)
+            st_eq_weld_stress = math.sqrt(st_weld_shear_stress ** 2 + st_weld_moment_stress ** 2)
+            if st_eq_weld_stress <= IS800_2007.cl_10_5_7_1_1_fillet_weld_design_stress(
+                    ultimate_stresses=(weld_fu, beam_fu, st_fu)):
+                break
         # stiffener warnings
 
         if st_moment >= st_moment_capacity:
@@ -861,7 +882,7 @@ def bc_endplate_design(uiObj):
     force_flange = max(t_bf, p_bf)
 
     if capacity_beam_flange < force_flange:
-        design_status = False
+        # design_status = False
         logger.error(": Forces in the beam flange is greater than its load carrying capacity")
         logger.warning(": The maximum allowable force on beam flange of selected section is %2.2f kN"
                        % (round(capacity_beam_flange/1000, 3)))
@@ -943,12 +964,12 @@ def bc_endplate_design(uiObj):
 
     outputobj['Stiffener']['Status'] = st_status
     outputobj['Stiffener']['Number'] = int(st_number)
-    outputobj['Stiffener']['Length'] = float(round(st_length, 3))     # TODO:
+    outputobj['Stiffener']['Length'] = float(round(st_length, 3))     # TODO: Sourabh give calculated values
     outputobj['Stiffener']['Height'] = float(round(st_height, 3))
-    outputobj['Stiffener']['Thickness'] = 10.0  # TODO: Sourabh give calculated values
+    outputobj['Stiffener']['Thickness'] = float(round(st_thickness,3))  # TODO: Sourabh give calculated values
     outputobj['Stiffener']['NotchBottom'] = float(round(st_notch_bottom, 3))
     outputobj['Stiffener']['NotchTop'] = float(round(st_notch_top, 3))
-    outputobj['Stiffener']['Weld'] = 8.0    # TODO: Sourabh give calculated values
+    outputobj['Stiffener']['Weld'] = float(round(st_beam_weld,3))   # TODO: Sourabh give calculated values
 
     # Detailing
     if endplate_type == 'flush':

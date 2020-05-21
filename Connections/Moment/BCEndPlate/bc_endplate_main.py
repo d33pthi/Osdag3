@@ -1289,13 +1289,12 @@ class Maincontroller(QMainWindow):
 		if not filename:
 			return
 		try:
-			out_file = open(str(filename), 'wb')
+			with open(str(filename), 'w') as out_file:
+				json.dump(self.uiObj, out_file)
 		except IOError:
 			QMessageBox.information(self, "Unable to open file",
 									"There was an error opening \"%s\"" % filename)
 			return
-		json.dump(self.uiObj, out_file)
-		out_file.close()
 		pass
 
 	def load_design_inputs(self):
@@ -1303,12 +1302,12 @@ class Maincontroller(QMainWindow):
 		if not filename:
 			return
 		try:
-			in_file = open(str(filename), 'rb')
+			with open(filename, 'r') as in_file:
+				ui_obj = json.load(in_file)
 		except IOError:
 			QMessageBox.information(self, "Unable to open file",
 									"There was an error opening \"%s\"" % filename)
 			return
-		ui_obj = json.load(in_file)
 		self.set_dict_touser_inputs(ui_obj)
 
 	def save_log_messages(self):
@@ -1347,8 +1346,8 @@ class Maincontroller(QMainWindow):
 		self.call_designreport(file_name, report_summary)
 
 		# Creates PDF
-		config = ConfigParser.ConfigParser()
-		config.readfp(open(r'Osdag.config'))
+		config = configparser.ConfigParser()
+		config.read_file(open(r'Osdag.config'))
 		wkhtmltopdf_path = config.get('wkhtml_path', 'path1')
 
 		config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
@@ -1489,7 +1488,7 @@ class Maincontroller(QMainWindow):
 		filename = os.path.join("Connections", "Moment", "BCEndPlate", "saveINPUT.txt")
 		if os.path.isfile(filename):
 			file_object = open(filename, 'rb')
-			uiObj = pickle.load(file_object)
+			uiObj = json.load(file_object)
 			return uiObj
 		else:
 			return None
@@ -3021,7 +3020,6 @@ class Maincontroller(QMainWindow):
 def set_osdaglogger():
 	global logger
 	if logger is None:
-
 		logger = logging.getLogger("osdag")
 	else:
 		for handler in logger.handlers[:]:

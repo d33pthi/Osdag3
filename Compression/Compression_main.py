@@ -696,7 +696,7 @@ class Maincontroller(QMainWindow):
 		"""
 		Returns: Read for the previous user inputs design
 		"""
-		filename = os.path.join("Tension", "saveINPUT.txt")
+		filename = os.path.join("Compression", "saveINPUT.txt")
 		if os.path.isfile(filename):
 			with open(filename, 'r') as file_object:
 				uiObj = json.load(file_object)
