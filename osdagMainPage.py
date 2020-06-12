@@ -83,6 +83,9 @@ The Rules/Steps to use the template are(OsdagMainWindow):
 import os
 import shutil
 from pathlib import Path
+from PyQt5.QtWidgets import QMessageBox,QApplication, QDialog, QMainWindow
+import urllib.request
+#from Thread import timer
 
 
 ############################ Pre-Build Database Updation/Creation #################
@@ -230,6 +233,10 @@ class LeftPanelButton(QWidget):          # Custom Button widget for the Left Pan
 class OsdagMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        resolution = QtWidgets.QDesktopWidget().screenGeometry()
+        width = resolution.width()
+        height = resolution.height()
+        self.resize(width*(0.85),height*(0.75))
         self.ui=Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.comboBox_help.currentIndexChanged.connect(self.selection_change)
@@ -258,7 +265,7 @@ class OsdagMainWindow(QMainWindow):
                                                     'Column to Column' :[
                                                                 ('Cover Plate Bolted','ResourceFiles/images/coverplate.png','C2C_Cover_Plate_Bolted'),
                                                                 ('Cover Plate Welded','ResourceFiles/images/coverplate.png','C2C_Cover_Plate_Welded'),
-                                                                ('End Plate Connection','ResourceFiles/images/column_end_plate.jpg','C2C_End_Plate_Connection'),
+                                                                ('End Plate Connection','ResourceFiles/images/ccep_flush.png','C2C_End_Plate_Connection'),
                                                                 self.show_moment_connection_cc,
                                                                     ],
                                                     'PEB' : self.Under_Development,
@@ -387,8 +394,15 @@ class OsdagMainWindow(QMainWindow):
 
             else:
                 raise ValueError
-        self.showMaximized()
+        self.center()
+        self.show()
 
+    def center(self):
+        frameGm = self.frameGeometry()
+        screen = QtWidgets.QApplication.desktop().screenNumber(QtWidgets.QApplication.desktop().cursor().pos())
+        centerPoint = QtWidgets.QApplication.desktop().screenGeometry(screen).center()
+        frameGm.moveCenter(centerPoint)
+        self.move(frameGm.topLeft())
 
     @pyqtSlot(int)
     def current_changed(self, index):
@@ -660,6 +674,25 @@ class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
     def exit(self):
         QCoreApplication.exit()
 
+######################### UpDateNotifi ################
+
+class Update(QMainWindow):
+    def __init__(self, old_version):
+        super().__init__()
+        self.old_version=old_version
+    def notifi(self):
+        try:
+            url = "https://anshulsingh-py.github.io/test/version.txt"
+            file = urllib.request.urlopen(url)
+            for line in file:
+                decoded_line = line.decode("utf-8")
+            new_version = decoded_line.split("=")[1]
+            if int(new_version) > self.old_version:
+                print("update")
+                msg = QMessageBox.information(self, 'Update available','<a href=https://google.com>Click to downlaod<a/>')
+        except:
+            print("No internet connection")
+
 
 if __name__ == '__main__':
 
@@ -676,10 +709,13 @@ if __name__ == '__main__':
     window = OsdagMainWindow()
     trayIcon = SystemTrayIcon(QtGui.QIcon(path), window)
 
+
     trayIcon.show()
     # app.exec_()
     # sys.exit(app.exec_())
     try:
+        update = Update(0)
+        update.notifi()
         QCoreApplication.exit(app.exec_()) # to properly close the Qt Application use QCoreApplication instead of sys
     except BaseException as e:
         print("ERROR", e)

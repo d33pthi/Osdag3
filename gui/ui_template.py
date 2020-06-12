@@ -41,7 +41,7 @@ from utils.common.component import Section,I_sectional_Properties
 from utils.common.component import *
 from .customized_popup import Ui_Popup
 # from .ui_summary_popup import Ui_Dialog1
-from .ui_design_preferences import Ui_Dialog
+#from .ui_design_preferences import Ui_Dialog
 
 from gui.ui_summary_popup import Ui_Dialog1
 from design_report.reportGenerator import save_html
@@ -72,6 +72,7 @@ from design_type.tension_member.tension_bolted import Tension_bolted
 from design_type.tension_member.tension_welded import Tension_welded
 import logging
 from cad.cad3dconnection import cadconnection
+import pandas as pd
 
 class Ui_ModuleWindow(QtWidgets.QMainWindow):
     resized = QtCore.pyqtSignal()
@@ -133,6 +134,7 @@ class Ui_ModuleWindow(QtWidgets.QMainWindow):
             for handler in logger.handlers[:]:
                 logger.removeHandler(handler)
             self.closed.emit()
+            self.ui.designPrefDialog.close()
             event.accept()
         else:
             event.ignore()
@@ -442,7 +444,7 @@ class Window(QMainWindow):
         #self.inputDock.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         font = QtGui.QFont()
         font.setFamily("Arial")
-        font.setPointSize(11)
+        font.setPointSize(10)
         font.setBold(True)
         font.setItalic(False)
         font.setWeight(75)
@@ -505,7 +507,7 @@ class Window(QMainWindow):
                 #l.setGeometry(QtCore.QRect(6, 10 + i, 120, 25))
 
                 font = QtGui.QFont()
-                font.setPointSize(11)
+                font.setPointSize(10)
                 font.setBold(False)
                 font.setWeight(50)
                 l.setFont(font)
@@ -521,7 +523,7 @@ class Window(QMainWindow):
                 combo = QtWidgets.QComboBox(self.dockWidgetContents)
                 #combo.setGeometry(QtCore.QRect(150, 10 + i, 150, 27))
                 font = QtGui.QFont()
-                font.setPointSize(11)
+                font.setPointSize(10)
                 font.setBold(False)
                 font.setWeight(50)
                 combo.setFont(font)
@@ -548,7 +550,7 @@ class Window(QMainWindow):
             if type == TYPE_TEXTBOX:
                 r = QtWidgets.QLineEdit(self.dockWidgetContents)
                 font = QtGui.QFont()
-                font.setPointSize(11)
+                font.setPointSize(10)
                 font.setBold(False)
                 font.setWeight(50)
                 r.setFont(font)
@@ -585,7 +587,7 @@ class Window(QMainWindow):
                 l = QtWidgets.QLineEdit(self.dockWidgetContents)
                 l.setGeometry(QtCore.QRect(150, 10 + i, 150, 27))
                 font = QtGui.QFont()
-                font.setPointSize(11)
+                font.setPointSize(10)
                 font.setBold(True)
                 font.setWeight(50)
                 l.setFont(font)
@@ -647,7 +649,6 @@ class Window(QMainWindow):
         in_scroll.setWidget(in_scrollcontent)
 
         maxi_width = maxi_width_left + maxi_width_right
-        print(maxi_width)
         in_scrollcontent.setMinimumSize(maxi_width,in_scrollcontent.sizeHint().height())
         maxi_width += 82
         maxi_width = max(maxi_width, 350)    # In case there is no widget
@@ -730,7 +731,7 @@ class Window(QMainWindow):
                     self.on_change_connect(key_changed, updated_list, data)
 
         self.btn_Reset = QtWidgets.QPushButton(self.dockWidgetContents)
-        self.btn_Reset.setGeometry(QtCore.QRect((maxi_width/2)-110, 650, 100, 35))
+        self.btn_Reset.setGeometry(QtCore.QRect((maxi_width/2)-110, 650, 100, 30))
         font = QtGui.QFont()
         font.setPointSize(10)
         font.setBold(True)
@@ -740,7 +741,7 @@ class Window(QMainWindow):
         self.btn_Reset.setObjectName("btn_Reset")
 
         self.btn_Design = QtWidgets.QPushButton(self.dockWidgetContents)
-        self.btn_Design.setGeometry(QtCore.QRect((maxi_width/2)+10, 650, 100, 35))
+        self.btn_Design.setGeometry(QtCore.QRect((maxi_width/2)+10, 650, 100, 30))
         font = QtGui.QFont()
         font.setPointSize(10)
         font.setBold(True)
@@ -772,7 +773,7 @@ class Window(QMainWindow):
         #self.outputDock.setMaximumSize(QtCore.QSize(maxi_width+220, 710))
         font = QtGui.QFont()
         font.setFamily("Arial")
-        font.setPointSize(11)
+        font.setPointSize(10)
         font.setBold(True)
         font.setWeight(75)
         self.outputDock.setFont(font)
@@ -810,7 +811,7 @@ class Window(QMainWindow):
                 l = QtWidgets.QLabel(self.dockWidgetContents_out)
                 #l.setGeometry(QtCore.QRect(6, 10 + i, maxi_width , 25))
                 font = QtGui.QFont()
-                font.setPointSize(11)
+                font.setPointSize(10)
                 font.setBold(False)
                 font.setWeight(50)
                 l.setFont(font)
@@ -830,7 +831,7 @@ class Window(QMainWindow):
 
                 #r.setGeometry(QtCore.QRect(100, 10 + i, 150, 27))
                 font = QtGui.QFont()
-                font.setPointSize(11)
+                font.setPointSize(10)
                 font.setBold(False)
                 font.setWeight(50)
                 r.setFont(font)
@@ -851,7 +852,7 @@ class Window(QMainWindow):
 
                 #b.setGeometry(QtCore.QRect(150, 10 + i, 150, 27))
                 font = QtGui.QFont()
-                font.setPointSize(11)
+                font.setPointSize(10)
                 font.setBold(False)
                 font.setWeight(50)
                 b.setFont(font)
@@ -875,7 +876,7 @@ class Window(QMainWindow):
                 font.setWeight(65)
                 q.setFont(font)
                 q.setObjectName("_title")
-
+                # q.setVisible(True if option[4] else False)
                 #q.setFixedSize(q.size())
                 q.setText(_translate("MainWindow",
                                      "<html><head/><body><p><span style=\" font-weight:600;\">" + lable + "</span></p></body></html>"))
@@ -936,6 +937,7 @@ class Window(QMainWindow):
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.outputDock)
         self.btn_CreateDesign = QtWidgets.QPushButton(self.dockWidgetContents_out)
         self.save_outputDock = QtWidgets.QPushButton(self.dockWidgetContents_out)
+
         self.btn_CreateDesign.setFixedSize(185, 35)
         self.save_outputDock.setFixedSize(185, 35)
         self.btn_CreateDesign.setAutoDefault(True)
@@ -1228,23 +1230,42 @@ class Window(QMainWindow):
         def save_fun():
             status = main.design_status
             out_list = main.output_values(main, status)
+            in_list = main.input_values(main)
             to_Save = {}
             flag = 0
             for option in out_list:
                 if option[0] is not None and option[2] == TYPE_TEXTBOX:
-                    to_Save[option[0]] = str(option[3])
+                    to_Save[option[0]] = option[3]
                     if str(option[3]):
                         flag = 1
+                if option[2] == TYPE_OUT_BUTTON:
+                    tup = option[3]
+                    fn = tup[1]
+                    for item in fn(main, status):
+                        lable = item[0]
+                        value = item[3]
+                        if lable!=None and value!=None:
+                            to_Save[lable] = value
+
+            df = pd.DataFrame(self.design_inputs.items())
+            #df.columns = ['label','value']
+            #columns = [('input values','label'),('input values','value')]
+            #df.columns = pd.MultiIndex.from_tuples(columns)
+
+            df1 = pd.DataFrame(to_Save.items())
+            #df1.columns = ['label','value']
+            #df1.columns = pd.MultiIndex.from_product([["Output Values"], df1.columns])
+
+            bigdata = pd.concat([df, df1], axis=1)
             if not flag:
                 QMessageBox.information(self, "Information",
                                         "Nothing to Save.")
             else:
                 fileName, _ = QFileDialog.getSaveFileName(self,
-                                                          "Save Output", os.path.join(self.folder, "untitled.txt"),
-                                                          "Input Files(*.txt)")
+                                                          "Save Output", os.path.join(self.folder, "untitled.csv"),
+                                                          "Input Files(*.csv)")
                 if fileName:
-                    with open(fileName, 'w') as outfile:
-                        yaml.dump(to_Save, outfile, default_flow_style=False)
+                    bigdata.to_csv(fileName, index=False, header=None)
                     QMessageBox.information(self, "Information",
                                             "Saved successfully.")
         return save_fun
@@ -1618,7 +1639,7 @@ class Window(QMainWindow):
         elif trigger_type == "Design_Pref":
 
             if self.prev_inputs != self.input_dock_inputs:
-                self.designPrefDialog = DesignPreferences(main, input_dictionary=self.input_dock_inputs)
+                #self.designPrefDialog = DesignPreferences(main, input_dictionary=self.input_dock_inputs)
 
                 if 'Select Section' in self.input_dock_inputs.values():
                     self.designPrefDialog.flag = False
@@ -1744,7 +1765,6 @@ class Window(QMainWindow):
                         metrices = QtGui.QFontMetrics(font)
                         l.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum,QtWidgets.QSizePolicy.Maximum))
                         maxi_width = max(maxi_width, metrices.boundingRect(lable).width() + 8)
-
 
 
                     if out_but_type == TYPE_SECTION:
@@ -2054,13 +2074,17 @@ class Window(QMainWindow):
             val = f(arg_list)
 
             for k2_key_name in k2_key_list:
+                print(k2_key_name)
                 k2 = tab.findChild(QtWidgets.QWidget, k2_key_name)
-                if typ == TYPE_COMBOBOX:
+                if isinstance(k2, QtWidgets.QComboBox):
                     k2.clear()
                     for values in val[k2_key_name]:
                         k2.addItem(str(values))
-                elif typ == TYPE_TEXTBOX:
+                if isinstance(k2, QtWidgets.QLineEdit):
                     k2.setText(str(val[k2_key_name]))
+                if isinstance(k2, QtWidgets.QLabel):
+                    pixmap1 = QPixmap(val[k2_key_name])
+                    k2.setPixmap(pixmap1)
 
     def refresh_section_connect(self, add_button, prev, key_name, key_type, tab_key, arg,data):
         add_button.clicked.connect(lambda: self.refresh_section(prev, key_name, key_type, tab_key, arg,data))

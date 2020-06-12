@@ -1,10 +1,10 @@
-language : generic
+language : generic  # Using generic instead of python to support installation of texlive.
 
 env:
-- CONDA_PYTHON=3.7
+- CONDA_PYTHON=3.7  # Declaring the python version for Conda
 
 cache :
-  directories:
+  directories:      # Declaring cache directories for each types of packages.
     - $HOME/miniconda
     - /tmp/texlive
     - $HOME/.texlive
@@ -12,9 +12,9 @@ cache :
 os : # this occurs both on Linux and OSX
 - linux
 
-dist: bionic
+dist: bionic  # Using bionic because travisCI offers complete features and flexibility on this distribution
 
-before_cache:
+before_cache:  # Running a script to clear all pycache folders.
   - rm -rf $HOME/miniconda/locks $HOME/miniconda/pkgs $HOME/miniconda/var $HOME/miniconda/envs/test-environment/conda-meta/history $HOME/miniconda/lib/python3.7/__pycache__
 
 before_install:

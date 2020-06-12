@@ -35,6 +35,7 @@ class OurLog(logging.Handler):
         elif record.levelname == 'INFO':
             msg = "<span style='color: green;'>" + msg + "</span>"
         self.key.append(msg)
+        self.key.append(record.levelname)
 
 def connectdb1():
     """
@@ -181,6 +182,27 @@ def tuple_to_str_red(tl):
         val = ''.join(v)
         arr.append(val)
     return arr
+
+def get_db_header(table_name):
+
+    conn = sqlite3.connect(PATH_TO_DATABASE)
+
+    if table_name == "Angles":
+        cursor = conn.execute("SELECT * FROM Angles")
+
+    elif table_name == "Channels":
+        cursor = conn.execute("SELECT * FROM Channels")
+
+    elif table_name == "Beams":
+        cursor = conn.execute("SELECT * FROM Beams")
+
+    else:
+        cursor = conn.execute("SELECT * FROM Columns")
+
+    header = [description[0] for description in cursor.description]
+
+    return header
+
 
 ##########################
 # Type Keys (Type of input field, tab type etc.)
@@ -377,6 +399,10 @@ VALUES_IMG_TENSIONWELDED = ["ResourceFiles/images/wA.png","ResourceFiles/images/
 VALUES_IMG_TENSIONBOLTED_DF01 = ["ResourceFiles/images/equaldp.png","ResourceFiles/images/bblequaldp.png","ResourceFiles/images/bbsequaldp.png","ResourceFiles/images/salequaldp.png","ResourceFiles/images/sasequaldp.png"]
 VALUES_IMG_TENSIONBOLTED_DF02 = ["ResourceFiles/images/unequaldp.png","ResourceFiles/images/bblunequaldp.png","ResourceFiles/images/bbsunequaldp.png","ResourceFiles/images/salunequaldp.png","ResourceFiles/images/sasunequaldp.png"]
 
+VALUES_IMG_TENSIONBOLTED_DF03 = ["ResourceFiles/images/Slope_Channel.png","ResourceFiles/images/Parallel_Channel.png","ResourceFiles/images/Slope_BBChannel.png","ResourceFiles/images/Parallel_BBChannel.png"]
+
+VALUES_IMG_BEAM = "ResourceFiles/images/Slope_Beam.png"
+
 VALUES_BEAMSEC = connectdb("Beams")
 VALUES_SECBM = connectdb("Beams")
 VALUES_COLSEC = connectdb("Columns")
@@ -405,7 +431,22 @@ DISP_MAX_END = 'Max. End Distance (mm)'
 DISP_MIN_PLATE_HEIGHT = 'Min. Plate Height (mm)'
 DISP_MAX_PLATE_HEIGHT = 'Max. Plate Height (mm)'
 DISP_MIN_PLATE_LENGTH = 'Min. Plate Length (mm)'
-DISP_MIN_PLATE_THICK = 'Min.Plate Thickness (mm)'
+DISP_MIN_PLATE_THICK = 'Min. Plate Thickness (mm)'
+
+######### Minimun for Flange####
+DISP_MIN_FLANGE_PLATE_HEIGHT = 'Min. Flange Plate Width (mm)'
+DISP_MAX_FLANGE_PLATE_HEIGHT = 'Max. Flange Plate Width (mm)'
+DISP_MIN_FLANGE_PLATE_LENGTH = 'Min. Flange Plate Length (mm)'
+DISP_MIN_FLANGE_PLATE_THICK = 'Min. Flange Plate Thickness (mm)'
+
+######### Minimun for Flange####
+DISP_MIN_WEB_PLATE_HEIGHT = 'Min. Web Plate Height (mm)'
+DISP_MAX_WEB_PLATE_HEIGHT = 'Max. Web Plate Height (mm)'
+DISP_MIN_WEB_PLATE_LENGTH = 'Min. Web Plate Width (mm)'
+DISP_MIN_WEB_PLATE_THICK = 'Min. Web Plate Thickness (mm)'
+
+
+
 
 DISP_MIN_PLATE_INNERHEIGHT = 'Min. Inner Plate Height (mm)'
 DISP_MAX_PLATE_INNERHEIGHT = 'Max. Inner Plate Height (mm)'
@@ -458,6 +499,7 @@ DISP_TITLE_FLANGESPLICEPLATE_OUTER = 'Outer plate '
 DISP_TITLE_FLANGESPLICEPLATE_INNER = 'Inner plate '
 KEY_DISP_SLENDER = 'Slenderness'
 
+
 KEY_DISP_PLATETHK = 'Thickness(mm)'
 
 DISP_TITLE_TENSION = 'Tension Capacity'
@@ -482,6 +524,7 @@ KEY_DISP_FLANGE_PLATE_PITCH = 'Pitch'
 KEY_DISP_FLANGE_PLATE_TEN_CAP ="Plate Tension Capacity (kN)"
 DISP_TITLE_SECTION = 'SECTION'
 DISP_TITLE_TENSION_SECTION = 'Section Details'
+SECTION_CLASSIFICATION ="Section Classification"
 
 KEY_DISP_D = 'Diameter (mm)'
 KEY_DISP_SHEAR = 'Shear (kN)'
@@ -571,10 +614,10 @@ KEY_OUT_DISP_GUSSET_PLATE_THICKNESS = 'Thickness (mm)'
 KEY_OUT_DISP_GUSSET_PLATE_SHEAR_DEMAND = 'Shear Demand (kN)'
 DISP_TITLE_GUSSET_PLATE = 'Gusset Plate Details'
 KEY_DISP_FLANGE_PLATE_LENGTH ='Length (mm)'
-KEY_DISP_FLANGE_PLATE_HEIGHT = 'Height (mm)'
+KEY_DISP_FLANGE_PLATE_HEIGHT = 'Width (mm)'
 KEY_DISP_INNERFLANGESPLICEPLATE = "Inner Plate Detials"
 DISP_TITLE_INNERFLANGESPLICEPLATE = 'Inner Flange splice plate'
-KEY_DISP_INNERFLANGE_PLATE_HEIGHT = 'Height (mm)'
+KEY_DISP_INNERFLANGE_PLATE_HEIGHT = 'Width (mm)'
 KEY_DISP_INNERFLANGE_PLATE_LENGTH ='Length (mm)'
 
 
@@ -730,8 +773,10 @@ DISP_TITLE_BOLTD = 'Bolt Details'
 DISP_TITLE_PLATED = 'Plate Details'
 
 KEY_DISP_DP_DETAILING_GAP = 'Gap between beam and <br>support (mm)'
-
+KEY_DISP_DP_DETAILING_GAP_BEAM = 'Gap between beam and beam (mm)'
+KEY_DISP_DP_DETAILING_GAP_COL = 'Gap between column and column (mm)'
 KEY_DISP_DP_DETAILING_CORROSIVE_INFLUENCES = 'Are the members exposed to <br>corrosive influences'
+KEY_DISP_DP_DETAILING_CORROSIVE_INFLUENCES_BEAM = 'Are the members exposed to corrosive influences'
 KEY_DISP_CORR_INFLUENCES = 'Are the members exposed to corrosive influences'
 KEY_DISP_DP_DESIGN_METHOD = 'Design Method'
 
@@ -821,14 +866,14 @@ KEY_PLATE_MAX_HEIGHT = 'Plate.MaxHeight'
 KEY_SLENDER = "Member.Slenderness"
 
 KEY_INNERFLANGEPLATE_THICKNESS = 'flange_plate.innerthickness_provided'
-KEY_FLANGE_PLATE_HEIGHT = 'Flange_Plate.Height (mm)'
+KEY_FLANGE_PLATE_HEIGHT = 'Flange_Plate.Width (mm)'
 KEY_OUT_FLANGESPLATE_THICKNESS = 'flange_plate.Thickness'
 KEY_FLANGE_PLATE_LENGTH ='flange_plate.Length'
 KEY_OUT_FLANGE_BOLT_SHEAR ="flange_bolt.shear capacity"
 
 KEY_INNERPLATE= "flange_plate.Inner_plate_details"
 
-KEY_INNERFLANGE_PLATE_HEIGHT = 'Flange_Plate.InnerHeight'
+KEY_INNERFLANGE_PLATE_HEIGHT = 'Flange_Plate.InnerWidth'
 KEY_INNERFLANGE_PLATE_LENGTH ='flange_plate.InnerLength'
 
 KEY_DISP_AREA_CHECK ="Plate Area check (mm2)"
@@ -848,11 +893,11 @@ KEY_FLANGE_CAPACITY ='section.flange_capacity'
 KEY_FLANGE_TEN_CAPACITY ="Section.flange_capacity"
 KEY_DISP_FLANGE_TEN_CAPACITY ="Flange Tension Capacity (kN)"
 KEY_TENSIONYIELDINGCAP_FLANGE = 'section.tension_yielding_capacity'
-KEY_DISP_TENSIONYIELDINGCAP_FLANGE = 'Tension Yielding Capacity (kN)'
+KEY_DISP_TENSIONYIELDINGCAP_FLANGE = 'Flange Tension Yielding Capacity (kN)'
 KEY_TENSIONRUPTURECAP_FLANGE='section.tension_rupture_capacity '
-KEY_DISP_TENSIONRUPTURECAP_FLANGE= 'Tension Rupture Capacity (kN)'
+KEY_DISP_TENSIONRUPTURECAP_FLANGE= 'Flange Tension Rupture Capacity (kN)'
 KEY_BLOCKSHEARCAP_FLANGE='section.block_shear_capacity'
-KEY_DISP_BLOCKSHEARCAP_FLANGE='Block Shear Capacity (kN)'
+KEY_DISP_BLOCKSHEARCAP_FLANGE='Flange Block Shear Capacity (kN)'
 # flange plate
 KEY_TENSIONYIELDINGCAP_FLANGE_PLATE = 'Flange_plate.tension_yielding_capacity (kN)'
 KEY_DISP_TENSIONYIELDINGCAP_FLANGE_PLATE ='Tension Yielding Capacity (kN)'
@@ -986,15 +1031,15 @@ DISP_TITLE_WEBSPLICEPLATE = 'Web splice plate'
 
 KEY_DISP_WEBPLATE_THICKNESS = 'Thickness (mm)*'
 
-VALUES_PLATETHICKNESS_CUSTOMIZED = ['6', '8', '10', '12', '14', '16', '18', '20', '22', '24', '26', '28', '30','32','36','40',
- '25','28','32','36','40','45','50','56','63','80']
+VALUES_PLATETHICKNESS_CUSTOMIZED = ['6', '8', '10', '12', '14', '16', '18', '20', '22', '24', '25', '26', '28', '30','32',
+                                    '36','40','45','50','56','63','80']
 
 
 KEY_WEB_PLATE_HEIGHT = 'Web_Plate.Height (mm)'
 KEY_DISP_WEB_PLATE_HEIGHT = 'Height (mm)'
-KEY_WEB_PLATE_LENGTH ='Web_Plate.Length'
+KEY_WEB_PLATE_LENGTH ='Web_Plate.Width'
 KEY_OUT_WEBPLATE_THICKNESS = 'Web_Plate.Thickness'
-KEY_DISP_WEB_PLATE_LENGTH ='Length (mm)'
+KEY_DISP_WEB_PLATE_LENGTH ='Width (mm)'
 DISP_TITLE_BOLT_CAPACITY_WEB = 'Web Bolt Capacity'
 KEY_BOLT_CAPACITIES_WEB = 'Web Bolt.Capacities'
 
@@ -1027,7 +1072,7 @@ KEY_DISP_TENSIONYIELDINGCAP_WEB ='Web Tension Yielding Capacity (kN)'
 KEY_TENSIONRUPTURECAP_WEB ='section.tension_rupture_capacity_web'
 KEY_DISP_TENSIONRUPTURECAP_WEB ='Web Tension Rupture Capacity (kN)'
 KEY_TENSIONBLOCK_WEB ='section.block_shear_capacity_web'
-KEY_DISP_BLOCKSHEARCAP_WEB ='Block Shear Capacity (kN)'
+KEY_DISP_BLOCKSHEARCAP_WEB ='Web Block Shear Capacity (kN)'
 KEY_WEB_TEN_CAPACITY ="section.Tension_capacity_web"
 KEY_DISP_WEB_TEN_CAPACITY ="Web Tension Capacity (kN)"
 # web in shear
@@ -1131,7 +1176,7 @@ KEY_OUT_DISP_BOLT_SLIP= 'Slip Resistance'
 KEY_OUT_BOLT_CAPACITY = 'Bolt.Capacity'
 KEY_OUT_DISP_BOLT_CAPACITY = 'Capacity (kN)'
 KEY_OUT_DISP_BOLT_VALUE = 'Bolt Value (kN)'
-KEY_OUT_BOLT_FORCE = 'Bolt.Force'
+KEY_OUT_BOLT_FORCE = 'Bolt.Force (kN)'
 KEY_OUT_DISP_BOLT_FORCE = 'Bolt Force (kN)'
 KEY_OUT_DISP_BOLT_SHEAR_FORCE = 'Bolt Shear Force (kN)'
 KEY_OUT_BOLT_TENSION_FORCE = 'Bolt.TensionForce'
